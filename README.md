@@ -95,8 +95,11 @@ customer         | customer_id
 
 ## Решение 3
 
+Просмотр прав у sys_temp:
 
-Запросы:
+![alt text](image-4.png)
+
+### Запросы:
 
 ```
 #SQL
