@@ -82,7 +82,7 @@ customer         | customer_id
 
 ## Решение 2
 
-Таблица - [text](tables.csv)
+[Ссылка на таблицу](tables.csv)
 
 
 ## Задание 3*
