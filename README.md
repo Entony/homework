@@ -1,112 +1,112 @@
-# Домашнее задание к занятию 3 "Работа с данными (DDL/DML)" - Карпов Антон Юрьевич
+# Домашнее задание к занятию "SQL. Часть 2" - Карпов Антон Юрьевич
 
 ## Задание 1
 
-1.1. Поднимите чистый инстанс MySQL версии 8.0+. Можно использовать локальный сервер или контейнер Docker.
+Одним запросом получите информацию о магазине, в котором обслуживается более 300 покупателей, и выведите в результат следующую информацию:
 
-1.2. Создайте учётную запись sys_temp.
-
-1.3. Выполните запрос на получение списка пользователей в базе данных. (скриншот)
-
-1.4. Дайте все права для пользователя sys_temp.
-
-1.5. Выполните запрос на получение списка прав для пользователя sys_temp. (скриншот)
-
-1.6. Переподключитесь к базе данных от имени sys_temp.
-
-Для смены типа аутентификации с sha2 используйте запрос:
-
-ALTER USER 'sys_test'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';
-1.6. По ссылке https://downloads.mysql.com/docs/sakila-db.zip скачайте дамп базы данных.
-
-1.7. Восстановите дамп в базу данных.
-
-1.8. При работе в IDE сформируйте ER-диаграмму получившейся базы данных. При работе в командной строке используйте команду для получения всех таблиц базы данных. (скриншот)
-
-Результатом работы должны быть скриншоты обозначенных заданий, а также простыня со всеми запросами.
+фамилия и имя сотрудника из этого магазина;
+город нахождения магазина;
+количество пользователей, закреплённых в этом магазине.
 
 ## Решение 1
 
-Список пользователей:
+Запрос
+```
+select concat(s.first_name, ' ', s.last_name) AS staff_name, c.city, count(cu.customer_id) AS count_of_customers 
+from staff s
+inner join store st ON st.store_id = s.store_id
+inner join address a ON st.address_id = a.address_id
+inner join city c ON c.city_id = a.city_id 
+inner join customer cu ON st.store_id = cu.store_id
+group by staff_name, c.city
+having count_of_customers > 300; 
+```
 
-![alt text](image-1.png)
-
-Права пользователя sys_temp:
+Результат:
 
 ![alt text](image.png)
 
-![alt text](image-2.png)
 
-Получение всех таблиц базы данных:
+## Задание 2
 
-![alt text](image-3.png)
-
-### Список запросов:
-
-```
-#SQL
-
-CREATE USER sys_temp@localhost IDENTIFIED BY 'password';
-SELECT user FROM mysql.user;
-SHOW GRANTS FOR 'sys_temp'@'localhost';
-exit;
-
-#подключаемся в командной строке linux через пользователя sys_temp
-mysql -u sys_temp -p
-
-#SQL
-exit;
-
-#возвращаемся в консоль linux
-wget https://downloads.mysql.com/docs/sakila-db.zip && unzip sakila-db.zip -d /home/karpov/homework/sql1
-
-#SQL
-CREATE DATABASE sakila;
-
-#linux, восстановление базы из дампа:
-mysql -u sys_temp -p sakila < /home/karpov/homework/sql1/sakila-db/sakila-schema.sql
-mysql -u sys_temp -p sakila < /home/karpov/homework/sql1/sakila-db/sakila-data.sql
-
-#SQL
-mysql -u sys_temp -p
-SHOW TABLES FROM sakila;
-
-```
-
-## Задание 2. Отправка и получение сообщений
-
-Составьте таблицу, используя любой текстовый редактор или Excel, в которой должно быть два столбца: в первом должны быть названия таблиц восстановленной базы, во втором названия первичных ключей этих таблиц. Пример: (скриншот/текст)
-
-Название таблицы | Название первичного ключа
-customer         | customer_id
+Получите количество фильмов, продолжительность которых больше средней продолжительности всех фильмов.
 
 ## Решение 2
 
-[Ссылка на таблицу](tables.csv)
+Запрос:
+```
+select count(film_id)
+from film
+where length > (select avg(length) from film);
+```
+
+Результат:
+
+![alt text](image-1.png)
 
 
-## Задание 3*
+## Задание 3
 
-3.1. Уберите у пользователя sys_temp права на внесение, изменение и удаление данных из базы sakila.
-
-3.2. Выполните запрос на получение списка прав для пользователя sys_temp. (скриншот)
-
-Результатом работы должны быть скриншоты обозначенных заданий, а также простыня со всеми запросами.
+Получите информацию, за какой месяц была получена наибольшая сумма платежей, и добавьте информацию по количеству аренд за этот месяц.
 
 ## Решение 3
 
-Просмотр прав у sys_temp:
+Запрос:
+```
+select month(payment_date), sum(amount) as sum, count(r.rental_id) as rental_count
+from payment p
+left join rental r on r.rental_id = p.rental_id
+group by month(p.payment_date)
+order by sum desc
+limit 1;
+```
+
+Результат:
+
+![alt text](image-2.png)
+
+
+## Задание 4*
+
+Посчитайте количество продаж, выполненных каждым продавцом. Добавьте вычисляемую колонку «Премия». Если количество продаж превышает 8000, то значение в колонке будет «Да», иначе должно быть значение «Нет».
+
+## Решение 4
+
+Запрос:
+```
+select concat(s.first_name, ' ', s.last_name) as name, count(payment_id) as count_sales,
+case 
+	when count(payment_id) > 8000 then 'Yes'
+	else 'No'
+end as Bonus
+from payment p
+inner join staff s ON s.staff_id = p.staff_id
+GROUP BY name;
+```
+Результат:
+
+![alt text](image-3.png)
+
+
+## Задание 5*
+
+Найдите фильмы, которые ни разу не брали в аренду.
+
+## Решение 5
+
+Запрос:
+```
+select f.title
+from film f
+left join inventory i on i.film_id = f.film_id
+left join rental r on i.inventory_id = r.inventory_id 
+where r.rental_id IS NULL;
+```
+
+Результат:
 
 ![alt text](image-4.png)
-
-### Запросы:
-
-```
-#SQL
-REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'sys_temp'@'localhost';
-GRANT SELECT ON sakila.* TO 'sys_temp'@'localhost';
-```
-
+![alt text](image-5.png)
 
 
 
