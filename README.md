@@ -8,7 +8,7 @@
 
 ## Решение 1
 
-
+Master-slave организован таким образом, что запись данных ведется только на мастер, чтение - со слейва и мастера (в зависимости от настроек, можно настроить только чтение на слейве). В схеме master-master обе ноды используются как для записи, так и чтения. 
 
 ## Задание 2
 
@@ -65,14 +65,14 @@ insert into test (name) values('test1');
 Статус репликации после выполнения запроса на мастере
 ```
 select * from pg_stat_replication;
-``` :
-[g_stat_replication](pg_stat_replication_202601261509.csv)
+```
+[ссылка на файл csv](pg_stat_replication_202601261509.csv)
 
 Статус репликации после выполнения запроса на слейве
 ```
 select * from pg_stat_wal_receiver;
-``` :
-pg_stat_wal_receiver_202601261515.csv
+``` 
+[ссылка на файл csv](pg_stat_wal_receiver_202601261515.csv)
 
 Проверяем репликацию. Выполняем на мастере запросы:
 ```
@@ -103,11 +103,15 @@ insert into test (name) values('test1');
 
 Конфигурация master1:
 
-![alt text](image-8.png) или [тут](docker-mysql-master-master/master/conf/mysql.conf.cnf)
+![alt text](image-8.png)
+
+или [тут](docker-mysql-master-master/master/conf/mysql.conf.cnf)
 
 Конфигурация master2:
 
-![alt text](image-9.png) или [тут](docker-mysql-master-master/slave/conf/mysql.conf.cnf)
+![alt text](image-9.png)
+
+или [тут](docker-mysql-master-master/slave/conf/mysql.conf.cnf)
 
 Запрос show replica status на мастере1:
 
