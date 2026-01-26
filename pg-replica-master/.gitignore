@@ -1,0 +1,18 @@
+# Docker volumes и временные файлы
+.env
+*.log
+
+# PostgreSQL данные (если используется локальное хранение)
+data/
+logs/
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Backup файлы
+*.bak
+*.backup 

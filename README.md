@@ -1,112 +1,146 @@
-# Домашнее задание к занятию "SQL. Часть 2" - Карпов Антон Юрьевич
+# Домашнее задание к занятию "Репликация и масштабирование. Часть 1" - Карпов Антон Юрьевич
 
 ## Задание 1
 
-Одним запросом получите информацию о магазине, в котором обслуживается более 300 покупателей, и выведите в результат следующую информацию:
+На лекции рассматривались режимы репликации master-slave, master-master, опишите их различия.
 
-фамилия и имя сотрудника из этого магазина;
-город нахождения магазина;
-количество пользователей, закреплённых в этом магазине.
+Ответить в свободной форме.
 
 ## Решение 1
 
-Запрос
-```
-select concat(s.first_name, ' ', s.last_name) AS staff_name, c.city, count(cu.customer_id) AS count_of_customers 
-from staff s
-inner join store st ON st.store_id = s.store_id
-inner join address a ON st.address_id = a.address_id
-inner join city c ON c.city_id = a.city_id 
-inner join customer cu ON st.store_id = cu.store_id
-group by staff_name, c.city
-having count_of_customers > 300; 
-```
-
-Результат:
-
-![alt text](image.png)
 
 
 ## Задание 2
 
-Получите количество фильмов, продолжительность которых больше средней продолжительности всех фильмов.
+Выполните конфигурацию master-slave репликации, примером можно пользоваться из лекции.
+
+Приложите скриншоты конфигурации, выполнения работы: состояния и режимы работы серверов.
 
 ## Решение 2
 
-Запрос:
+Т.к. в задании не указано, для какой СУБД нужно выполнить, сделал на двух.
+
+### MySQL
+
+Конфигурация мастера:
+
+![alt text](image.png) или [тут](docker-mysql-master-slave-master/master/conf/mysql.conf.cnf)
+
+Конфигурация слейва:
+
+![alt text](image-1.png) или [тут](docker-mysql-master-slave-master/slave/conf/mysql.conf.cnf)
+
+Статус реплики (результат выполнения запроса SHOW REPLICA STATUS):
+
+[replica_status](_show_replica_status__202601261130.csv)
+
+Проверка работы репликации:
+
 ```
-select count(film_id)
-from film
-where length > (select avg(length) from film);
-```
+#SQL - на мастере
+create table test(
+id int primary key auto_increment,
+name varchar(50)
+);
 
-Результат:
-
-![alt text](image-1.png)
-
-
-## Задание 3
-
-Получите информацию, за какой месяц была получена наибольшая сумма платежей, и добавьте информацию по количеству аренд за этот месяц.
-
-## Решение 3
-
-Запрос:
-```
-select month(payment_date), sum(amount) as sum, count(r.rental_id) as rental_count
-from payment p
-left join rental r on r.rental_id = p.rental_id
-group by month(p.payment_date)
-order by sum desc
-limit 1;
+insert into test (name) values('test1');
 ```
 
 Результат:
 
 ![alt text](image-2.png)
 
-
-## Задание 4*
-
-Посчитайте количество продаж, выполненных каждым продавцом. Добавьте вычисляемую колонку «Премия». Если количество продаж превышает 8000, то значение в колонке будет «Да», иначе должно быть значение «Нет».
-
-## Решение 4
-
-Запрос:
-```
-select concat(s.first_name, ' ', s.last_name) as name, count(payment_id) as count_sales,
-case 
-	when count(payment_id) > 8000 then 'Yes'
-	else 'No'
-end as Bonus
-from payment p
-inner join staff s ON s.staff_id = p.staff_id
-GROUP BY name;
-```
-Результат:
+Выполнение запроса на слейве:
 
 ![alt text](image-3.png)
 
+### PostgreSQL
 
-## Задание 5*
+Конфигурация мастера:
+[postgresql.conf](pg-replica-master/master/postgresql.conf)
 
-Найдите фильмы, которые ни разу не брали в аренду.
+Конфигурация слейва:
+[postgresql.conf](pg-replica-master/slave/postgresql.conf)
 
-## Решение 5
-
-Запрос:
+Статус репликации после выполнения запроса на мастере
 ```
-select f.title
-from film f
-left join inventory i on i.film_id = f.film_id
-left join rental r on i.inventory_id = r.inventory_id 
-where r.rental_id IS NULL;
+select * from pg_stat_replication;
+``` :
+[g_stat_replication](pg_stat_replication_202601261509.csv)
+
+Статус репликации после выполнения запроса на слейве
+```
+select * from pg_stat_wal_receiver;
+``` :
+pg_stat_wal_receiver_202601261515.csv
+
+Проверяем репликацию. Выполняем на мастере запросы:
+```
+create table test(
+id int primary key GENERATED ALWAYS as identity,
+name varchar(50)
+);
+
+insert into test (name) values('test1');
 ```
 
 Результат:
 
 ![alt text](image-4.png)
+
+Проверяем на слейве:
+
 ![alt text](image-5.png)
+
+
+## Задание 3*
+
+Выполните конфигурацию master-master репликации. Произведите проверку.
+
+Приложите скриншоты конфигурации, выполнения работы: состояния и режимы работы серверов.
+
+## Решение 3
+
+Конфигурация master1:
+
+![alt text](image-8.png) или [тут](docker-mysql-master-master/master/conf/mysql.conf.cnf)
+
+Конфигурация master2:
+
+![alt text](image-9.png) или [тут](docker-mysql-master-master/slave/conf/mysql.conf.cnf)
+
+Запрос show replica status на мастере1:
+
+![alt text](image-7.png)
+
+[Ссылка](_show_replica_status_from_master1__202601261718.csv)
+
+Запрос show replica status на мастере2:
+
+![alt text](image-10.png)
+
+[Ссылка](_show_replica_status_from_master1__202601261718.csv)
+
+Создаем таблицу test_master1 на master1:
+
+![alt text](image-11.png)
+
+Проверяем ее наличие на master2:
+
+![alt text](image-12.png)
+
+Идем в обратную сторону - создаем таблицу test_master2 на master2:
+
+![alt text](image-13.png)
+
+Проверяем наличие в master1:
+
+![alt text](image-14.png)
+
+
+
+
+
 
 
 
