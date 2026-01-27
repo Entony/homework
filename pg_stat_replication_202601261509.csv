@@ -1,2 +1,0 @@
-"pid","usesysid","usename","application_name","client_addr","client_hostname","client_port","backend_start","backend_xmin","state","sent_lsn","write_lsn","flush_lsn","replay_lsn","write_lag","flush_lag","replay_lag","sync_priority","sync_state","reply_time"
-78,16384,replicator,postgres-slave,"172.20.0.3",,37616,2026-01-26 15:01:54.325 +0300,,streaming,"0/303F270","0/303F270","0/303F270","0/303F270",,,,0,async,2026-01-26 15:09:43.239 +0300
